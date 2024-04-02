@@ -1,10 +1,22 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using static CubeSpriteManager;
 
 public class CubeController : MonoBehaviour
 {
-    public enum CubeType { Red, Green, Blue, Yellow, TNT, Box, Stone, Vase, Random, Default }
     [HideInInspector] public CubeType type;
+    private bool tntHint = false;
+
+    private Image spriteRenderer;
+
+    private int x;
+    private int y;
+
+    private void Awake()
+    {
+        spriteRenderer = GetComponent<Image>();
+    }
 
     public void Initialize(CubeType cubeType)
     {
@@ -12,17 +24,43 @@ public class CubeController : MonoBehaviour
         // Additional initialization logic here, e.g., setting the cube color based on type
     }
 
-    private void OnMouseDown()
+    public void SetXY(int x, int y)
     {
+        this.x = x;
+        this.y = y;
+    }
+
+    public int GetX()
+    {
+        return x;
+    }
+
+    public int GetY()
+    {
+        return y;
+    }
+
+    public void SetCubeType(CubeType cubeType)
+    {
+        type = cubeType;
+        spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(type);
+    }
+
+    public void SetCubeType(CubeType cubeType, bool tntHint)
+    {
+        type = cubeType;
+        this.tntHint = tntHint;
+        spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(cubeType, tntHint);
+    }
+
+    public void OnMouseDown()
+    {
+        Debug.Log("Cube clicked: " + x + ", " + y);
         CheckForMatches();
     }
 
     public void CheckForMatches()
     {
-        List<CubeController> matchedCubes = GridManager.Instance.FindMatchesAt(transform.position, type);
-        if (matchedCubes.Count >= 3) // Minimum match size
-        {
-            GridManager.Instance.RemoveCubes(matchedCubes);
-        }
+        GridManager.Instance.OnCubeClicked(this);
     }
 }

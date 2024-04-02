@@ -1,24 +1,30 @@
 using UnityEngine;
 using System.Collections.Generic;
+using static CubeSpriteManager;
 
 public class GridManager : MonoBehaviour
 {
     public static GridManager Instance { get; private set; }
+
     public GameObject cubePrefab;
     public GameObject gridContainer;
+
     private CubeController[,] grid;
     private RectTransform gridRectTransform;
     private List<GameObject> cubes = new List<GameObject>();
+
     private int width;
     private int height;
 
-    private int cubeWidth = 1;
-    private int cubeHeight = 1;
     private int cubeSize = 100;
     private int spacing = 0;
 
     private float containerWidth;
     private float containerHeight;
+
+    private bool isProcessing = false;
+
+    List<List<CubeController>> matches = new List<List<CubeController>>();
 
     private void Awake()
     {
@@ -45,19 +51,29 @@ public class GridManager : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                Vector2 position = GetCubePosition(x, height - 1 - y); // Adjust for bottom-left origin
-                GameObject cubeObj = ObjectPooler.Instance.SpawnFromPool("Cube", position, Quaternion.identity);
+                Vector2 position = GetCubePosition(width - x - 1, y); // Adjust for bottom-left origin
+
+                string typeStr = layout[y * width + x];
+                CubeType cubeType = DetermineCubeType(typeStr);
+
+                GameObject cubeObj = CubeFactory.Instance.CreateCube(cubeType);
+
+                cubeObj.transform.position = position;
+                cubeObj.transform.rotation = Quaternion.identity;
+
                 cubes.Add(cubeObj);
+
                 cubeObj.transform.SetParent(gridContainer.transform, false);
                 cubeObj.GetComponent<RectTransform>().anchoredPosition = position;
 
                 CubeController cube = cubeObj.GetComponent<CubeController>();
-                string typeStr = layout[y * width + x]; // Adjust if necessary
-                cube.type = DetermineCubeType(typeStr);
 
                 grid[x, y] = cube;
+                cube.SetXY(x, y);
             }
         }
+
+        FindAllMatches();
     }
 
     private void ResizeGridContainer()
@@ -76,7 +92,7 @@ public class GridManager : MonoBehaviour
     }
 
 
-    private CubeController.CubeType DetermineCubeType(string typeStr)
+    private CubeType DetermineCubeType(string typeStr)
     {
         if (typeStr == "rand")
         {
@@ -84,70 +100,108 @@ public class GridManager : MonoBehaviour
         }
         switch (typeStr)
         {
-            case "r": return CubeController.CubeType.Red;
-            case "g": return CubeController.CubeType.Green;
-            case "b": return CubeController.CubeType.Blue;
-            case "y": return CubeController.CubeType.Yellow;
-            case "t": return CubeController.CubeType.TNT;
-            case "bo": return CubeController.CubeType.Box;
-            case "s": return CubeController.CubeType.Stone;
-            case "v": return CubeController.CubeType.Vase;
-            case "rand": return CubeController.CubeType.Random;
-            default: return CubeController.CubeType.Default;
+            case "r": return CubeType.Red;
+            case "g": return CubeType.Green;
+            case "b": return CubeType.Blue;
+            case "y": return CubeType.Yellow;
+            case "t": return CubeType.TNT;
+            case "bo": return CubeType.Box;
+            case "s": return CubeType.Stone;
+            case "v": return CubeType.Vase;
+            case "rand": return CubeType.Random;
+            default: return CubeType.Default;
         }
     }
 
-    private CubeController.CubeType GetRandomCubeType()
+    private CubeType GetRandomCubeType()
     {
-        CubeController.CubeType[] possibleTypes = new CubeController.CubeType[]
+        CubeType[] possibleTypes = new CubeType[]
         {
-        CubeController.CubeType.Red,
-        CubeController.CubeType.Green,
-        CubeController.CubeType.Blue,
-        CubeController.CubeType.Yellow
+        CubeType.Red,
+        CubeType.Green,
+        CubeType.Blue,
+        CubeType.Yellow
         };
 
         int randomIndex = Random.Range(0, possibleTypes.Length);
         return possibleTypes[randomIndex];
     }
-    public List<CubeController> FindMatchesAt(Vector2 position, CubeController.CubeType type)
+
+    public void OnCubeClicked(CubeController clickedCube)
     {
-        List<CubeController> matches = new List<CubeController>();
-        // Check adjacent cubes in all four directions (up, down, left, right)
-        // and add them to the matches list if they're of the same type
-        // Make sure to account for bounds of the grid
-
-        // Example for right-side check
-        Vector2 right = new Vector2(position.x + 1, position.y);
-        if (IsCubeOfType(right, type))
+        Debug.Log("Cube clicked: " + clickedCube.GetX() + ", " + clickedCube.GetY());
+        // Prevent multiple clicks while processing matches
+        if (isProcessing)
+            return;
+        else
+            isProcessing = true;
+        foreach (var match in matches)
         {
-            matches.Add(grid[(int)right.x, (int)right.y]);
+            if (match.Contains(clickedCube))
+            {
+                // Handle match (e.g., remove cubes)
+                HandleMatch(match);
+                break; // Assuming a cube can be part of only one match at a time
+            }
         }
-
-        // Repeat for other directions...
-
-        return matches;
+        isProcessing = false;
     }
 
-    private bool IsCubeOfType(Vector2 position, CubeController.CubeType type)
+    private void HandleMatch(List<CubeController> match)
     {
-        // Check if the position is within the grid bounds and the cube at this position is of the specified type
-        if (position.x >= 0 && position.x < grid.GetLength(0) &&
-            position.y >= 0 && position.y < grid.GetLength(1))
-        {
-            return grid[(int)position.x, (int)position.y].type == type;
-        }
-        return false;
+        RemoveCubes(match);
+        UpdateGridAfterRemoval();
+        FindAllMatches();
     }
 
-    public void RemoveCubes(List<CubeController> cubes)
+    private void FindAllMatches()
+    {
+        matches.Clear(); // Clear previous matches
+        bool[,] visited = new bool[width, height]; // Track visited cubes
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (!visited[x, y])
+                {
+                    List<CubeController> match = new List<CubeController>();
+                    CheckAdjacentCubes(x, y, grid[x, y].type, ref match, ref visited);
+
+                    if (match.Count >= 3) // Minimum match size
+                    {
+                        matches.Add(match);
+                    }
+                }
+            }
+        }
+
+        Debug.Log("Found " + matches.Count + " matches");
+    }
+
+    private void CheckAdjacentCubes(int x, int y, CubeType type, ref List<CubeController> match, ref bool[,] visited)
+    {
+        // Check bounds and whether the cube is already visited
+        if (x < 0 || x >= width || y < 0 || y >= height || visited[x, y] || grid[x, y].type != type)
+            return;
+
+        visited[x, y] = true;
+        match.Add(grid[x, y]);
+
+        // Recursively check adjacent cubes
+        CheckAdjacentCubes(x - 1, y, type, ref match, ref visited); // Left
+        CheckAdjacentCubes(x + 1, y, type, ref match, ref visited); // Right
+        CheckAdjacentCubes(x, y - 1, type, ref match, ref visited); // Down
+        CheckAdjacentCubes(x, y + 1, type, ref match, ref visited); // Up
+    }
+
+    private void RemoveCubes(List<CubeController> cubes)
     {
         foreach (CubeController cube in cubes)
         {
-            // Deactivate cube and return it to the pool
-            cube.gameObject.SetActive(false);
+            grid[cube.GetX(), cube.GetY()] = null;
             // Assuming you have a method in ObjectPooler to handle returning objects to the pool
-            ObjectPooler.Instance.ReturnToPool(cube.type.ToString(), cube.gameObject);
+            CubePoolManager.Instance.ReturnCube(cube.gameObject);
         }
         // After removing cubes, you may need to make other cubes fall down and fill the gaps
         UpdateGridAfterRemoval();
