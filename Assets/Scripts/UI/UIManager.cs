@@ -8,6 +8,7 @@ public class UIManager : MonoBehaviour
     public static event Action OnUIReady;
 
     public TMP_Text levelText;
+    public TMP_Text moveText;
     public GameObject winPopup;
     public GameObject losePopup;
 
@@ -21,6 +22,12 @@ public class UIManager : MonoBehaviour
         HideWinPopup();
         HideLosePopup();
     }
+
+    public void SetMoveCountText(int moves)
+    {
+        moveText.text = $"{moves}";
+    }
+
     public void SetLevelText(int level)
     {
         levelText.text = $"Level {level}";

@@ -36,6 +36,15 @@ public class LevelManager : MonoBehaviour
         NextLevel();
     }
 
+    public int GetCurrentLevel()
+    {
+        if (currentLevel < 1)
+        {
+            currentLevel = 1;
+        }
+        return currentLevel;
+    }
+
     private void LoadCurrentLevel()
     {
         // Get the saved level number from PlayerPrefs, default to 1 if not set
