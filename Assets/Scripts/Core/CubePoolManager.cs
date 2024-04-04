@@ -43,6 +43,7 @@ public class CubePoolManager : MonoBehaviour
                 {
                     // Function called when a cube is returned to the pool; e.g., make the cube inactive
                     obj.SetActive(false);
+                    obj.transform.SetParent(transform);
                 },
                 actionOnDestroy: (obj) =>
                 {
@@ -65,6 +66,8 @@ public class CubePoolManager : MonoBehaviour
     // Method to return a cube to the pool
     public void ReturnCube(GameObject cube)
     {
+        cube.SetActive(false);
+        cube.transform.SetParent(transform);
         cubePool.Release(cube);
     }
 }

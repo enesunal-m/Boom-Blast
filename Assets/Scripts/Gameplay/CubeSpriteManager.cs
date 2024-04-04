@@ -18,6 +18,8 @@ public class CubeSpriteManager : MonoBehaviour
 
     private Dictionary<CubeType, Sprite> spritesDictionary = new Dictionary<CubeType, Sprite>();
 
+    public List<CubeSpriteEntry> cubeDestractionEffectSprites;
+
     void Awake()
     {
         if (Instance != null)

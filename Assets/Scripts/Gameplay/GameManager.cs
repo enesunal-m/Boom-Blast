@@ -39,4 +39,14 @@ public class GameManager : MonoBehaviour
 
         GridManager.Instance.CreateGrid(levelData.grid_width, levelData.grid_height, levelData.grid);
     }
+
+    public void UseMove()
+    {
+        currentMoveCount--;
+        uiManager.SetMoveCountText(currentMoveCount);
+        if (currentMoveCount <= 0)
+        {
+            // TODO: GameOver();
+        }
+    }
 }

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,15 +14,26 @@ public class CubeController : MonoBehaviour
     private int x;
     private int y;
 
+    public bool IsMovable
+    {
+        get
+        {
+            return type != CubeType.Box && type != CubeType.Stone;
+        }
+    }
+
     private void Awake()
     {
         spriteRenderer = GetComponent<Image>();
     }
 
-    public void Initialize(CubeType cubeType)
+    public void Initialize(CubeType cubeType, int x, int y)
     {
         type = cubeType;
-        // Additional initialization logic here, e.g., setting the cube color based on type
+        spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(type);
+
+        this.x = x;
+        this.y = y;
     }
 
     public void SetXY(int x, int y)
@@ -43,7 +55,8 @@ public class CubeController : MonoBehaviour
     public void SetCubeType(CubeType cubeType)
     {
         type = cubeType;
-        spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(type);
+        tntHint = false;
+        spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(type, false);
     }
 
     public void SetCubeType(CubeType cubeType, bool tntHint)
@@ -53,14 +66,53 @@ public class CubeController : MonoBehaviour
         spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(cubeType, tntHint);
     }
 
+    public void ActivateTNTHint()
+    {
+        tntHint = true;
+        spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(type, tntHint);
+    }
+
+    public void DeactivateTNTHint()
+    {
+        tntHint = false;
+        spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(type, tntHint);
+    }
+
     public void OnMouseDown()
     {
-        Debug.Log("Cube clicked: " + x + ", " + y);
+        if (type == CubeType.Stone || type == CubeType.Box || type == CubeType.Vase)
+            return;
         CheckForMatches();
+    }
+
+    public void ConvertToTNT()
+    {
+        type = CubeType.TNT;
+        spriteRenderer.sprite = CubeSpriteManager.Instance.GetSprite(type);
     }
 
     public void CheckForMatches()
     {
         GridManager.Instance.OnCubeClicked(this);
+    }
+
+    public void PlayDestructionEffect()
+    {
+        GameObject particleInstance = ParticlePoolManager.Instance.GetParticle(ParticleType.Cube);
+        particleInstance.transform.position = transform.position;
+        particleInstance.SetActive(true);
+
+        ParticleSystem ps = particleInstance.GetComponent<ParticleSystem>();
+        ps.Play();
+
+        ParticleSystem.MainModule mainModule = ps.main;
+        // mainModule.startColor = cubeTypeData.color; // Set particle color
+
+        var textureSheetAnimation = ps.textureSheetAnimation;
+        // textureSheetAnimation.SetSprite(0, cubeTypeData.destructionSprite); // Set particle sprite
+
+        // Play the particle system
+        ps.Play();
+
     }
 }
