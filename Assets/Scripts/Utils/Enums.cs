@@ -1,6 +1,9 @@
 public enum ParticleType
 {
-    Cube,
+    RedCube,
+    GreenCube,
+    BlueCube,
+    YellowCube,
     Box,
     Stone,
     Vase,

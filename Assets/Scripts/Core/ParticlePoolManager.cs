@@ -60,6 +60,7 @@ public class ParticlePoolManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (particlePools == null) return;
         foreach (var pool in particlePools.Values)
         {
             pool.Dispose();
@@ -89,7 +90,23 @@ public class ParticlePoolManager : MonoBehaviour
         foreach (var obj in tempList)
         {
             obj.SetActive(false);
+            obj.transform.SetParent(transform);
+            obj.GetComponent<ParticleAutoReturn>().SetPool(pool);
             pool.Release(obj);
+        }
+    }
+
+    public void ReturnParticle(ParticleType type, GameObject particle)
+    {
+        if (particlePools.TryGetValue(type, out var pool))
+        {
+            particle.SetActive(false);
+            particle.transform.SetParent(transform);
+            pool.Release(particle);
+        }
+        else
+        {
+            Debug.LogWarning($"No particle pool found for type {type}");
         }
     }
 }

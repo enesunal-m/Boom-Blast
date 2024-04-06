@@ -57,4 +57,21 @@ public static class CubeUtils
         }
         return affectedPositions;
     }
+
+    public static ParticleType ConvertCubeTypeToParticleType(CubeType type)
+    {
+        switch (type)
+        {
+            case CubeType.Red: return ParticleType.RedCube;
+            case CubeType.Green: return ParticleType.GreenCube;
+            case CubeType.Blue: return ParticleType.BlueCube;
+            case CubeType.Yellow: return ParticleType.YellowCube;
+            case CubeType.TNT: return ParticleType.TNT;
+            case CubeType.Box: return ParticleType.Box;
+            case CubeType.Stone: return ParticleType.Stone;
+            case CubeType.Vase: return ParticleType.Vase;
+            case CubeType.Random: return ParticleType.RedCube;
+            default: return ParticleType.RedCube;
+        }
+    }
 }

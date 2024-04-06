@@ -74,7 +74,7 @@ public class GridManager : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 gridLayout[x, y] = layout[y * width + x];
-                Vector2 position = GetCubePosition(x, y); // Adjust for bottom-left origin
+                Vector2 position = GetCubePosition(x, y);
 
                 string typeStr = layout[y * width + x];
                 CubeType cubeType = DetermineCubeType(typeStr);
@@ -137,7 +137,6 @@ public class GridManager : MonoBehaviour
 
     public void OnCubeClicked(CubeController clickedCube)
     {
-        // Prevent multiple clicks while processing matches
         if (isProcessing)
             return;
         else
@@ -158,11 +157,10 @@ public class GridManager : MonoBehaviour
                         gridLayout[clickedCube.GetX(), clickedCube.GetY()] = CubeUtils.ConvertCubeTypeToString(CubeType.TNT);
                         clickedCube.ConvertToTNT();
                         grid[clickedCube.GetX(), clickedCube.GetY()] = clickedCube;
-                        // match.Remove(clickedCube);
                     }
                     GameManager.Instance.UseMove();
                     HandleMatch(match);
-                    break; // Assuming a cube can be part of only one match at a time
+                    break;
                 }
             }
         }
@@ -220,7 +218,7 @@ public class GridManager : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                if (!visited[x, y])
+                if (!visited[x, y] && grid[x, y] != null)
                 {
                     List<CubeController> match = new List<CubeController>();
                     CheckAdjacentCubes(x, y, grid[x, y].type, ref match, ref visited);
@@ -255,7 +253,7 @@ public class GridManager : MonoBehaviour
     private void CheckAdjacentCubes(int x, int y, CubeType type, ref List<CubeController> match, ref bool[,] visited)
     {
         // Check bounds and whether the cube is already visited
-        if (x < 0 || x >= width || y < 0 || y >= height || visited[x, y] || grid[x, y].type != type)
+        if (x < 0 || x >= width || y < 0 || y >= height || visited[x, y] || grid[x, y] == null || grid[x, y].type != type)
             return;
 
         visited[x, y] = true;
@@ -293,7 +291,7 @@ public class GridManager : MonoBehaviour
             {
                 HandleTNTExplosion(cube);
             }
-            else if (cube.type == CubeType.Box || cube.type == CubeType.Stone || cube.type == CubeType.Vase)
+            else if (cube.type == CubeType.Box || cube.type == CubeType.Stone || cube.type == CubeType.Vase || cube.type == CubeType.VaseBroken)
             {
                 ObstacleController obstacle = cube.GetComponent<ObstacleController>();
                 obstacle.PlayDestructionEffect();
@@ -326,7 +324,12 @@ public class GridManager : MonoBehaviour
 
             for (int y = 0; y < height; y++)
             {
-                if (grid[x, y] == null && firstEmptySpace == -1)
+                if (grid[x, y] != null && firstEmptySpace != -1 && !grid[x, y].IsMovable)
+                {
+                    firstEmptySpace = -1; // Reset firstEmptySpace if a non-movable cube is found
+                    columnNeedsFill[x] = false; // This column won't need new cubes at the top
+                }
+                else if (grid[x, y] == null && firstEmptySpace == -1)
                 {
                     firstEmptySpace = y; // Found the first empty space in this column
                     columnNeedsFill[x] = true; // This column will need new cubes at the top
@@ -352,7 +355,6 @@ public class GridManager : MonoBehaviour
 
         yield return new WaitForSeconds(timeToMove);
 
-        // Fill the top of each column as needed
         for (int x = 0; x < width; x++)
         {
             if (columnNeedsFill[x])
@@ -366,28 +368,29 @@ public class GridManager : MonoBehaviour
 
     private void FillColumnTop(int columnIndex)
     {
-        int firstEmptySpace = -1; // Find the first empty space from the bottom
+        int firstEmptySpace = -1;
         for (int y = 0; y < height; y++)
         {
-            if (grid[columnIndex, y] == null)
+            if (grid[columnIndex, y] == null && firstEmptySpace == -1)
             {
                 firstEmptySpace = y;
-                break; // Stop at the first empty space
+            }
+            else if (grid[columnIndex, y] != null && firstEmptySpace != -1 && !grid[columnIndex, y].IsMovable)
+            {
+                firstEmptySpace = -1;
             }
         }
         int createCubeCount = 0;
-        // If there's an empty space, start filling from there up
         if (firstEmptySpace != -1)
         {
             for (int y = firstEmptySpace; y < height; y++)
             {
                 createCubeCount++;
-                Vector2 startPosition = GetCubePosition(columnIndex, height + y); // Ensure this is above the grid
+                Vector2 startPosition = GetCubePosition(columnIndex, height + y);
                 CubeType cubeType = DetermineCubeType("rand");
                 GameObject cubeObj = CubeFactory.Instance.CreateCube(cubeType, columnIndex, y);
                 cubeObj.transform.SetParent(gridContainer.transform, false);
 
-                // Directly set to start position without affecting the anchored position just yet
                 cubeObj.transform.position = startPosition;
                 cubeObj.transform.rotation = Quaternion.identity;
 
@@ -399,12 +402,9 @@ public class GridManager : MonoBehaviour
                 gridLayout[columnIndex, y] = CubeUtils.ConvertCubeTypeToString(cubeType);
 
                 cubeObj.GetComponent<RectTransform>().anchoredPosition = startPosition;
-                // Animate the cube dropping into place
                 StartCoroutine(MoveCubeAnimation(cubeObj, new Vector2Int(columnIndex, y)));
             }
         }
-
-        Debug.Log("Created " + createCubeCount + " cubes in column " + columnIndex);
     }
 
 
@@ -415,10 +415,10 @@ public class GridManager : MonoBehaviour
         Vector2 startPosition = rectTransform.anchoredPosition;
         Vector2 modifiedTargetPosition = GetCubePosition(targetPosition.x, targetPosition.y);
 
-        // Define an animation curve with a 'bounce' effect at the end
         AnimationCurve curve = new AnimationCurve(
             new Keyframe(0, 0, 0, 2),
-            new Keyframe(0.7f, 0.9f, 1, 1),
+            new Keyframe(0.5f, 0.9f, 1, 1),
+            new Keyframe(0.75f, 1.02f, 1, 0),
             new Keyframe(1, 1, 1, 0)
         );
 
@@ -431,8 +431,6 @@ public class GridManager : MonoBehaviour
             rectTransform.anchoredPosition = Vector2.LerpUnclamped(startPosition, modifiedTargetPosition, curveValue);
             yield return null;
         }
-
-        // Ensure the cube is exactly at the target position at the end of the animation
         rectTransform.anchoredPosition = modifiedTargetPosition;
     }
 

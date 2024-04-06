@@ -31,39 +31,33 @@ public class CubePoolManager : MonoBehaviour
             cubePool = new ObjectPool<GameObject>(
                 createFunc: () =>
                 {
-                    // Function to create a new cube
                     return Instantiate(cubePrefab);
                 },
                 actionOnGet: (obj) =>
                 {
-                    // Function called when a cube is taken from the pool; e.g., make the cube active
                     obj.SetActive(true);
                 },
                 actionOnRelease: (obj) =>
                 {
-                    // Function called when a cube is returned to the pool; e.g., make the cube inactive
                     obj.SetActive(false);
                     obj.transform.SetParent(transform);
                 },
                 actionOnDestroy: (obj) =>
                 {
-                    // Function called when a cube is destroyed
                     Destroy(obj);
                 },
-                collectionCheck: collectionCheck, // Set to true if you want the pool to check for double returns
-                defaultCapacity: defaultCapacity, // Initial size of the pool
-                maxSize: maxSize // Maximum size of the pool
+                collectionCheck: collectionCheck,
+                defaultCapacity: defaultCapacity,
+                maxSize: maxSize
             );
         }
     }
 
-    // Method to get a cube from the pool
     public GameObject GetCube()
     {
         return cubePool.Get();
     }
 
-    // Method to return a cube to the pool
     public void ReturnCube(GameObject cube)
     {
         cube.SetActive(false);

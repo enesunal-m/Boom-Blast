@@ -30,7 +30,7 @@ public class CubeFactory : MonoBehaviour
         }
         CubeController controller = cube.GetComponent<CubeController>();
         controller.SetXY(x, y);
-        controller.SetCubeType(type); // Method to set the cube's type and visuals
+        controller.SetCubeType(type);
         return cube;
     }
 
@@ -45,7 +45,7 @@ public class CubeFactory : MonoBehaviour
         }
         CubeController controller = cube.GetComponent<CubeController>();
         controller.SetXY(x, y);
-        controller.SetCubeType(type, tntHint); // Method to set the cube's type and visuals with TNT hint
+        controller.SetCubeType(type, tntHint);
         return cube;
     }
 

@@ -9,6 +9,7 @@ public class CubeController : MonoBehaviour
     [HideInInspector] public CubeType type;
     private bool tntHint = false;
 
+
     private Image spriteRenderer;
 
     private int x;
@@ -50,6 +51,10 @@ public class CubeController : MonoBehaviour
     public int GetY()
     {
         return y;
+    }
+    public Image GetSpriteRenderer()
+    {
+        return spriteRenderer;
     }
 
     public void SetCubeType(CubeType cubeType)
@@ -98,21 +103,20 @@ public class CubeController : MonoBehaviour
 
     public void PlayDestructionEffect()
     {
-        GameObject particleInstance = ParticlePoolManager.Instance.GetParticle(ParticleType.Cube);
+        if (type == CubeType.TNT)
+        {
+            Debug.Log("TNT Explosion" + transform.position);
+            ExplosionManager.Instance.TriggerExplosion(this.transform.position);
+            GameManager.Instance.ShakeScreen();
+            return;
+        }
+
+        ParticleType particleType = CubeUtils.ConvertCubeTypeToParticleType(type);
+        GameObject particleInstance = ParticlePoolManager.Instance.GetParticle(particleType);
         particleInstance.transform.position = transform.position;
         particleInstance.SetActive(true);
 
         ParticleSystem ps = particleInstance.GetComponent<ParticleSystem>();
         ps.Play();
-
-        ParticleSystem.MainModule mainModule = ps.main;
-        // mainModule.startColor = cubeTypeData.color; // Set particle color
-
-        var textureSheetAnimation = ps.textureSheetAnimation;
-        // textureSheetAnimation.SetSprite(0, cubeTypeData.destructionSprite); // Set particle sprite
-
-        // Play the particle system
-        ps.Play();
-
     }
 }

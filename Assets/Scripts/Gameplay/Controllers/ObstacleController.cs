@@ -67,7 +67,6 @@ public class ObstacleController : MonoBehaviour
         if (IsAdjacentTo(matchPosition))
         {
             GetHit();
-            Debug.Log("Obstacle hit at: " + cubeController.GetX() + ", " + cubeController.GetY());
             return true;
         }
         return false;
@@ -79,29 +78,45 @@ public class ObstacleController : MonoBehaviour
         {
             return;
         }
+        if (cubeController.type == CubeType.Vase)
+        {
+            cubeController.SetCubeType(CubeType.VaseBroken);
+        }
         health--;
         if (health <= 0)
         {
-            PlayDestructionEffect();
-            GridManager.Instance.GetGrid()[cubeController.GetX(), cubeController.GetY()] = null;
-            GridManager.Instance.GetGridLayout()[cubeController.GetX(), cubeController.GetY()] = null;
-            GridManager.OnCubeMatch -= HandleCubeMatches;
-            CubeFactory.Instance.ReturnCube(gameObject);
+            HandleDestroy();
         }
     }
 
     public void GetTNTHit()
     {
+        if (cubeController.type == CubeType.Vase)
+        {
+            cubeController.SetCubeType(CubeType.VaseBroken);
+        }
         health--;
         if (health <= 0)
         {
-            PlayDestructionEffect();
-            GridManager.Instance.GetGrid()[cubeController.GetX(), cubeController.GetY()] = null;
-            GridManager.Instance.GetGridLayout()[cubeController.GetX(), cubeController.GetY()] = null;
-            CubeFactory.Instance.ReturnCube(gameObject);
-            GridManager.OnCubeMatch -= HandleCubeMatches;
-            Destroy(this);
+            HandleDestroy();
         }
+    }
+
+    private void HandleDestroy()
+    {
+        PlayDestructionEffect();
+        GridManager.Instance.GetGrid()[cubeController.GetX(), cubeController.GetY()] = null;
+        GridManager.Instance.GetGridLayout()[cubeController.GetX(), cubeController.GetY()] = null;
+
+        GridManager.OnCubeMatch -= HandleCubeMatches;
+
+        if (cubeController.type == CubeType.VaseBroken)
+            GameManager.Instance.ObstacleCleared(CubeType.Vase);
+        else
+            GameManager.Instance.ObstacleCleared(cubeController.type);
+        CubeFactory.Instance.ReturnCube(gameObject);
+
+        Destroy(this);
     }
 
     private bool IsAdjacentTo(Vector2Int position)
@@ -120,14 +135,6 @@ public class ObstacleController : MonoBehaviour
         particleInstance.SetActive(true);
 
         ParticleSystem ps = particleInstance.GetComponent<ParticleSystem>();
-
-        ParticleSystem.MainModule mainModule = ps.main;
-        // mainModule.startColor = cubeTypeData.color; // Set particle color
-
-        var textureSheetAnimation = ps.textureSheetAnimation;
-        // textureSheetAnimation.SetSprite(0, cubeTypeData.destructionSprite); // Set particle sprite
-
-        // Play the particle system
         ps.Play();
     }
 

@@ -9,7 +9,8 @@ public class ParticleAutoReturn : MonoBehaviour
     void Awake()
     {
         ps = GetComponent<ParticleSystem>();
-        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        ps.Play();
+        // ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         var main = ps.main;
         main.stopAction = ParticleSystemStopAction.Callback;
     }
