@@ -430,7 +430,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2df612942ef3342c9bfbdf83da317883, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentLevel: 0
+  currentLevel: 1
+  overrideSavedLevel: 0
   maxLevel: 10
   uiManager: {fileID: 1685451839}
 --- !u!4 &143428464

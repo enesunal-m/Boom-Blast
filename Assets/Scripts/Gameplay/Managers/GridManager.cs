@@ -447,7 +447,6 @@ public class GridManager : MonoBehaviour
                 }
             }
         }
-        Debug.Log("Empty spaces: " + emptySpaces);
     }
 
     private void ApplyTNTHint(List<CubeController> tntMatch)

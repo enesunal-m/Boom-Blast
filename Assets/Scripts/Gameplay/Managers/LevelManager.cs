@@ -129,6 +129,7 @@ public class LevelManager : MonoBehaviour
         {
             GetUIManager().SetLevelText("Finished!");
             ResetProgress();
+            isFinished = false;
         }
         else
         {

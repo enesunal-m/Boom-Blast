@@ -127,7 +127,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 10, y: -5}
-  m_SizeDelta: {x: 30, y: 30}
+  m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &927080327695583842
 CanvasRenderer:
@@ -177,7 +177,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 690107840998429050, guid: 35a03fe59cae148f4861b013c711d4fd, type: 3}
       propertyPath: m_fontSize
-      value: 32
+      value: 45
       objectReference: {fileID: 0}
     - target: {fileID: 690107840998429050, guid: 35a03fe59cae148f4861b013c711d4fd, type: 3}
       propertyPath: m_fontStyle
@@ -189,7 +189,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 690107840998429050, guid: 35a03fe59cae148f4861b013c711d4fd, type: 3}
       propertyPath: m_fontSizeBase
-      value: 32
+      value: 45
       objectReference: {fileID: 0}
     - target: {fileID: 690107840998429050, guid: 35a03fe59cae148f4861b013c711d4fd, type: 3}
       propertyPath: m_characterSpacing
@@ -221,7 +221,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2577744759514322972, guid: 35a03fe59cae148f4861b013c711d4fd, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 70
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 2577744759514322972, guid: 35a03fe59cae148f4861b013c711d4fd, type: 3}
       propertyPath: m_SizeDelta.y

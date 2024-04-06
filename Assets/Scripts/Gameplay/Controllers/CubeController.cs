@@ -105,7 +105,6 @@ public class CubeController : MonoBehaviour
     {
         if (type == CubeType.TNT)
         {
-            Debug.Log("TNT Explosion" + transform.position);
             ExplosionManager.Instance.TriggerExplosion(this.transform.position);
             GameManager.Instance.ShakeScreen();
             return;
